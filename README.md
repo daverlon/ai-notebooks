@@ -19,4 +19,4 @@
 <br>
 <img src='https://encrypted-tbn2.gstatic.com/shopping?q=tbn:ANd9GcTFZ1aY1AMjjForuWjXiSkgRFGM5zdTCALxK-JuR6_KI_JAW7k&usqp=CAc' height=200>
 <br>
-<p>Read more about my implementations and progress on my <a href="https://davlon.xyz/blog.html" target="_blank"><b>blog!</b></a></p>
+<p>Read more about my implementations and progress on my <a href="https://davlon.dev/blog.html" target="_blank"><b>blog!</b></a></p>
