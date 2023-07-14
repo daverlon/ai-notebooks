@@ -1,0 +1,15 @@
+echo -------------------
+echo Compilation started.
+echo -------------------
+
+g++ -std=c++17                              \
+-g -Wall                                    \
+src/*.cpp                                   \
+-o bin/game                                 \
+-Idependencies/include                      \
+-Ldependencies/lib                          \
+-lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf
+
+echo -------------------
+echo Finished compiling.
+echo -------------------
