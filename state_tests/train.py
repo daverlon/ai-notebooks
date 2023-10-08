@@ -8,17 +8,22 @@ from model import NiN
 from data_preprocessing import prep_dataloader
 from eval import do_eval
 
-MODEL_PATH = "nets/"
-BS = 32
-N_EPOCHS = 5
+import argparse
+
+MODEL_PATH = "./nets/"
 
 if __name__ == "__main__":
 
   device = torch.device("cuda")
 
-  dataloader_train = prep_dataloader(BS, True)
+  MODEL_FILE, N_EPOCHS, BS, LR, MOMENTUM = [*sys.argv[1:]]
+  MODEL_PATH += MODEL_FILE
+  N_EPOCHS = int(N_EPOCHS)
+  BS = int(BS)
+  LR = float(LR)
+  MOMENTUM = float(MOMENTUM)
 
-  MODEL_PATH += sys.argv[1]
+  train_dataloader = prep_dataloader(BS, True)
 
   model = NiN()
   if os.path.exists(MODEL_PATH):
@@ -26,12 +31,12 @@ if __name__ == "__main__":
 
   model = model.to(device)
   loss_fn = nn.CrossEntropyLoss()
-  optim = torch.optim.SGD(params=model.parameters(), lr=0.1)
+  optim = torch.optim.SGD(params=model.parameters(), lr=LR, momentum=MOMENTUM)
 
-  for e in tqdm(range(N_EPOCHS)):
-    for b, (x, y) in enumerate(dataloader_train):
+  for e in tqdm(range((N_EPOCHS))):
+    for b, (x, y) in enumerate(train_dataloader):
 
-      x = x.to(device)
+      x = x.type(torch.float).to(device)
       y = y.to(device)
 
       optim.zero_grad()
@@ -44,7 +49,8 @@ if __name__ == "__main__":
       loss.backward() 
       optim.step()
 
-      if b % 50 == 0: print("Epoch:", e, "Batch:", b, "Loss:", loss.detach().cpu().item()/float(BS), "Acc:", acc*100.0)
+      if b % 100 == 0: 
+        print(f"Epoch: {e+1}/{N_EPOCHS}, Batch: {b:4}/{int(60_000/BS)}, Loss: {loss.detach().cpu().item()/float(BS):6f}, Acc: {acc*100.0:4f}")
 
     print("Saving model to:", MODEL_PATH)
     torch.save(model.state_dict(), MODEL_PATH) 

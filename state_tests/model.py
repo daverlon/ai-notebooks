@@ -8,11 +8,14 @@ class NiN_Block(nn.Module):
         super().__init__()
         self.layer_stack = nn.Sequential(
             nn.Conv2d(in_channels=inc, out_channels=outc, kernel_size=ks, stride=stride, padding=padding),
-            nn.ReLU(),
+            # nn.ReLU(),
+            nn.LeakyReLU(),
             nn.Conv2d(in_channels=outc, out_channels=outc, kernel_size=1, stride=1, padding=0),
-            nn.ReLU(),            
+            # nn.ReLU(),            
+            nn.LeakyReLU(),
             nn.Conv2d(in_channels=outc, out_channels=outc, kernel_size=1, stride=1, padding=0),
-            nn.ReLU()        
+            # nn.ReLU(),
+            nn.LeakyReLU(),
         )
     def forward(self, x):
         return self.layer_stack(x)
