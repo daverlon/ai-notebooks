@@ -12,14 +12,13 @@ from data_preprocessing import load_batch
 if __name__ == "__main__":
 
     modeltype = torch.float32
-
     device = torch.device("cpu")
 
     if torch.cuda.is_available():
        device = torch.device("cuda")
        modeltype = torch.double
 
-    if torch.backends.mps.is_available(): device = torch.device("mps")
+
     print(device)
 
     # just the eyes
@@ -41,7 +40,7 @@ if __name__ == "__main__":
 
     if os.path.exists(MODEL_PATH + '.pt'):
         print("Loaded model:", MODEL_PATH + '.pt')
-        model.load_state_dict(torch.load(MODEL_PATH + '.pt'))
+        model.load_state_dict(torch.load(MODEL_PATH + '.pt', map_location="cpu"))
     else:
         print("Could not find model:", MODEL_PATH + '.pt')
         print("Creating new model.")
