@@ -65,7 +65,9 @@ class MiniGoogLeNet(nn.Module):
             # nn.BatchNorm2d(3),
             
             nn.Flatten(),
-            nn.Linear(in_features=3*12*12, out_features=4)
+            nn.Linear(in_features=3*12*12, out_features=256),
+            nn.Linear(in_features=256, out_features=128),
+            nn.Linear(in_features=128, out_features=4)
         )
     def forward(self, x):
         return self.layer_stack(x)
