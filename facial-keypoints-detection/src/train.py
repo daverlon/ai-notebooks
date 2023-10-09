@@ -11,7 +11,16 @@ from data_preprocessing import load_batch
 
 if __name__ == "__main__":
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    modeltype = torch.float32
+
+    device = torch.device("cpu")
+
+    if torch.cuda.is_available():
+       device = torch.device("cuda")
+       modeltype = torch.double
+
+    if torch.backends.mps.is_available(): device = torch.device("mps")
+    print(device)
 
     # just the eyes
     labels_npy = pd.read_csv("../dataset/train/training.csv")[["left_eye_center_x","left_eye_center_y", "right_eye_center_x", "right_eye_center_y"]].to_numpy()
@@ -37,7 +46,7 @@ if __name__ == "__main__":
         print("Could not find model:", MODEL_PATH + '.pt')
         print("Creating new model.")
 
-    model = model.to(device).type(torch.double)
+    model = model.to(device).type(modeltype)
 
     loss_fn = nn.MSELoss()
     optim = torch.optim.SGD(params=model.parameters(), lr=LR, momentum=MOMENTUM)
@@ -55,8 +64,8 @@ if __name__ == "__main__":
             # get batch
             batch_i = randint(0, N_SAMPLES-BS)
             x, y = load_batch(batch_i, BS, labels=labels_npy)
-            x = x.to(device).type(torch.double)
-            y = y.to(device).type(torch.double)
+            x = x.to(device).type(modeltype)
+            y = y.to(device).type(modeltype)
 
             forward = model(x)
             loss = loss_fn(forward, y)
@@ -68,7 +77,7 @@ if __name__ == "__main__":
             optim.step()
 
             # prog.set_description(f"Loss: {losses[len(losses)-1]}")
-            print(f"Loss: {[loss.detach().cpu().item()/torch.Tensor([64]).type(torch.double), loss.detach().item()]}")
+            print(f"Loss: {[loss.detach().cpu().item()/torch.Tensor([64]).type(modeltype), loss.detach().item()]}")
             torch.save(model.state_dict(), MODEL_PATH + '.pt')
 
 
