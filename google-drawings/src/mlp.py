@@ -31,11 +31,12 @@ if __name__ == "__main__":
     layers = [int(l) for l in layer_arg]
 
     if sys.argv[1] == "train":
+        # python3 mlp.py "train" "nets/ok.pt" "784,512,512,256,256,256,256,256,256,128" "200,128,0.001,0.0"
 
         print("Training MLP Model")
 
         # epoch, bs, lr, mom
-        hyper_params = [int(item) if item.isdigit() else float(item) for item in sys.argv[3].split(",")]
+        hyper_params = [int(item) if item.isdigit() else float(item) for item in sys.argv[4].split(",")]
 
         model = MLP(layers)
 
@@ -45,6 +46,7 @@ if __name__ == "__main__":
         train_model(model_path, model, criterion, hyper_params)
 
     elif sys.argv[1] == "play":
+        # python3 mlp.py "play" "nets/ok.pt" "784,512,512,256,256,256,256,256,256,128"
 
         print("Testing MLP Model")
 
