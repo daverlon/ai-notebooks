@@ -49,7 +49,7 @@ if __name__ == "__main__":
 
   N_EPOCHS = 5
 
-  device = torch.device("mps")
+  device = torch.device("cuda")
 
   model = DaNet(MODEL_PATH).to(device)
   print(model)
