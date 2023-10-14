@@ -19,7 +19,7 @@ def batch_dataloader(BS: int):
     file_ixs = np.random.randint(0, N_FILES, (BS,2))
     file_ixs[:,1] = np.random.randint(0, N_SAMPLES_PER_FILE, BS)
     x = torch.zeros(BS, 1, 28, 28)
-    y = torch.zeros(BS).type(torch.int32)
+    y = torch.zeros(BS).type(torch.int64)
     for a, i in enumerate(file_ixs):
       x[a] = torch.from_numpy(np.load(file_name(i[0]))[i[1]]).reshape((28,28)).type(torch.float)
       y[a] = i[0]
