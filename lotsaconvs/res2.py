@@ -8,7 +8,7 @@ from torchvision.datasets import CIFAR100
 from torchvision.transforms import ToTensor
 import matplotlib.pyplot as plt
 
-class ResBlock(nn.Module):
+class DaBlock(nn.Module):
     def __init__(self, inc, outc, k, p):
         super().__init__()
         self.layer_stack = nn.Sequential(
@@ -23,7 +23,8 @@ class ResBlock(nn.Module):
         )
         self.relu = nn.ReLU()
     def forward(self, x):
-        x = torch.concat((self.layer_stack(x), self.shortcut_transform(x)), dim=1)
+        # x = torch.concat((self.layer_stack(x), self.shortcut_transform(x)), dim=1)
+        x = self.layer_stack(x)
         return x
 
 class DaNet(nn.Module):
@@ -31,40 +32,50 @@ class DaNet(nn.Module):
         super().__init__()
         self.layer_stack = nn.Sequential(
 
-            ResBlock(3, 64, 5, 2),
+            DaBlock(3, 64, 7, 3),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2),
 
-            ResBlock(128, 256, 3, 1),
+            DaBlock(64, 128, 3, 1),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2),
 
-            nn.AdaptiveAvgPool2d((1,1)),
+            DaBlock(128, 256, 1, 0),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+
+            # nn.Conv2d(in_channels=256, out_channels=100, kernel_size=1, stride=1, padding=0),
+
+            
+
+            # nn.AdaptiveAvgPool2d((1,1)),
 
             nn.Flatten(),
-            nn.Linear(in_features=512, out_features=100),
-            nn.LogSoftmax(dim=1)
+            # nn.Linear(in_features=512, out_features=100),
+            # nn.LogSoftmax(dim=1)
         )
         self.path = path
-        if os.path.exists(path) and len(sys.argv) == 2:
+        if os.path.exists(path) and len(sys.argv) == 3 and sys.argv[2] == "old":
             self.load_state_dict(torch.load(self.path))
             print("Loaded existing model:", self.path)
         elif len(sys.argv) == 3 and sys.argv[2] == "new":
             torch.save(self.state_dict(), self.path)
             print("Created new model:", self.path)
     def forward(self, x):
-        return self.layer_stack(x)
+        x = self.layer_stack(x)
+        #print(x.shape)
+        return x
 
 if __name__ == "__main__":
 
-    BS = 128
-    EVAL_BS = 128
+    BS = 32
+    EVAL_BS = 32
     LR = 0.1
     MOM = 0.0
 
     N_EPOCHS = 20
 
-    device = torch.device("cuda")
+    device = torch.device("mps")
 
     train_dataloader = DataLoader(CIFAR100(root="../datasets/", train=True, download=False, transform=ToTensor()),
                                   batch_size=BS, shuffle=True)
@@ -76,7 +87,7 @@ if __name__ == "__main__":
     model.train()
 
     optim = torch.optim.SGD(params=model.parameters(), lr=LR, momentum=MOM)
-    criterion = nn.NLLLoss()
+    criterion = nn.CrossEntropyLoss()
 
     losses = []
     accs = []
@@ -105,7 +116,7 @@ if __name__ == "__main__":
                 pred_eval = model(x_eval.to(device))
                 eval_acc = (pred_eval.detach().cpu().argmax(dim=1)==y_eval).sum().item()
                 if n_batch % 2 == 0:
-                    print(f"Epoch: {n_epoch+1:8}, Batch: {n_batch:8}/{len(train_dataloader):4} --- Loss: {loss.detach().cpu().item()/float(BS):20f}, Acc: {acc/float(BS):10f} {acc:4}/{BS}, Eval Acc: {eval_acc:4}/{EVAL_BS} {eval_acc/float(EVAL_BS):10f}")
+                    print(f"Epoch: {n_epoch+1:8}/{N_EPOCHS}, Batch: {n_batch:8}/{len(train_dataloader):4} --- Loss: {loss.detach().cpu().item()/float(BS):20f}, Acc: {acc/float(BS):10f} {acc:4}/{BS}, Eval Acc: {eval_acc:4}/{EVAL_BS} {eval_acc/float(EVAL_BS):10f}")
                 if n_batch % 5 == 0:
                     losses.append(loss.detach().cpu().item()/BS)
                     eval_accs.append(eval_acc/float(EVAL_BS))
