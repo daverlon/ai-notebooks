@@ -44,14 +44,16 @@ class DaNet(nn.Module):
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2),
 
-            # nn.Conv2d(in_channels=256, out_channels=100, kernel_size=1, stride=1, padding=0),
+            DaBlock(256, 512, 1, 0),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
 
-            
+            # nn.Conv2d(in_channels=256, out_channels=100, kernel_size=1, stride=1, padding=0),
 
             # nn.AdaptiveAvgPool2d((1,1)),
 
             nn.Flatten(),
-            # nn.Linear(in_features=512, out_features=100),
+            nn.Linear(in_features=2048, out_features=100),
             # nn.LogSoftmax(dim=1)
         )
         self.path = path
@@ -63,14 +65,14 @@ class DaNet(nn.Module):
             print("Created new model:", self.path)
     def forward(self, x):
         x = self.layer_stack(x)
-        #print(x.shape)
+        # print(x.shape)
         return x
 
 if __name__ == "__main__":
 
     BS = 32
     EVAL_BS = 32
-    LR = 0.1
+    LR = 0.001
     MOM = 0.0
 
     N_EPOCHS = 20
