@@ -4,15 +4,15 @@ import os
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from torchvision.datasets import MNIST, FashionMNIST
-from torchvision.transforms import ToTensor
+from torchvision.datasets import MNIST, FashionMNIST, CIFAR10
+from torchvision.transforms import ToTensor, RandomResizedCrop, Compose
 import matplotlib.pyplot as plt
 
 class ResBlock(nn.Module):
-    def __init__(self, inc, outc):
+    def __init__(self, inc, outc, ks, ss, ps):
         super().__init__()
         self.layer_stack = nn.Sequential(
-            nn.Conv2d(in_channels=inc, out_channels=outc, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(in_channels=inc, out_channels=outc, kernel_size=ks, stride=ss, padding=ps),
             nn.BatchNorm2d(num_features=outc),
             nn.ReLU(),
             nn.Conv2d(in_channels=outc, out_channels=outc, kernel_size=3, stride=1, padding=1),
@@ -34,18 +34,22 @@ class DaNet(nn.Module):
         super().__init__()
         self.layer_stack = nn.Sequential(
 
-            ResBlock(1, 32),
+            ResBlock(3, 64, 5, 1, 2),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2),
 
-            ResBlock(32, 64),
+            ResBlock(64, 128, 3, 1, 1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+
+            ResBlock(128, 196, 3, 1, 1),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2),
 
             nn.AdaptiveAvgPool2d(output_size=(1,1)),
 
             nn.Flatten(),
-            nn.Linear(in_features=64, out_features=10),
+            nn.Linear(in_features=196, out_features=10),
             nn.LogSoftmax(dim=1)
         )
         self.path = path
@@ -62,18 +66,18 @@ class DaNet(nn.Module):
 
 if __name__ == "__main__":
 
-    BS = 32
-    EVAL_BS = 32
-    LR = 0.01
+    BS = 256
+    EVAL_BS = 256
+    LR = 0.001
     MOM = 0.0
 
     N_EPOCHS = 20
 
-    device = torch.device("mps")
+    device = torch.device("cuda")
 
-    train_dataloader = DataLoader(FashionMNIST(root="../datasets/", train=True, download=False, transform=ToTensor()),
+    train_dataloader = DataLoader(CIFAR10(root="../datasets/", train=True, download=False, transform=ToTensor()),
                                   batch_size=BS, shuffle=True)
-    test_dataloader = DataLoader(FashionMNIST(root="../datasets/", train=False, download=False, transform=ToTensor()),
+    test_dataloader = DataLoader(CIFAR10(root="../datasets/", train=False, download=False, transform=ToTensor()),
                                   batch_size=EVAL_BS, shuffle=True)
 
     model = DaNet("nets/basix2.pt").to(device)
