@@ -70,14 +70,14 @@ class DaNet(nn.Module):
 
 if __name__ == "__main__":
 
-    BS = 32
-    EVAL_BS = 32
+    BS = 128
+    EVAL_BS = 128
     LR = 0.001
     MOM = 0.0
 
-    N_EPOCHS = 20
+    N_EPOCHS = 32
 
-    device = torch.device("mps")
+    device = torch.device("cuda")
 
     train_dataloader = DataLoader(CIFAR100(root="../datasets/", train=True, download=False, transform=ToTensor()),
                                   batch_size=BS, shuffle=True)
@@ -114,16 +114,18 @@ if __name__ == "__main__":
                 # eval
                 model.eval()
                 acc = (pred.detach().cpu().argmax(dim=1)==y).sum().item()
-                x_eval, y_eval = next(iter(test_dataloader))
-                pred_eval = model(x_eval.to(device))
-                eval_acc = (pred_eval.detach().cpu().argmax(dim=1)==y_eval).sum().item()
+                for x_eval, y_eval in test_dataloader:
+                    # x_eval, y_eval = next(iter(test_dataloader))
+                    pred_eval = model(x_eval.to(device))
+                    eval_acc = (pred_eval.detach().cpu().argmax(dim=1)==y_eval).sum().item()
+                    break
                 if n_batch % 2 == 0:
                     print(f"Epoch: {n_epoch+1:8}/{N_EPOCHS}, Batch: {n_batch:8}/{len(train_dataloader):4} --- Loss: {loss.detach().cpu().item()/float(BS):20f}, Acc: {acc/float(BS):10f} {acc:4}/{BS}, Eval Acc: {eval_acc:4}/{EVAL_BS} {eval_acc/float(EVAL_BS):10f}")
                 if n_batch % 5 == 0:
                     losses.append(loss.detach().cpu().item()/BS)
                     eval_accs.append(eval_acc/float(EVAL_BS))
                     accs.append(acc/BS)
-                # ----
+                    # ----
 
             plt.plot(losses, 'r')
             plt.plot(accs, 'g')
